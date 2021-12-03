@@ -3,53 +3,73 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public enum BattleState { START, PLAYERTURN, ENEMYTURN, WON, LOST }
+public enum BattleState
+{
+	START, 
+	PLAYERTURN, 
+	ENEMYTURN, 
+	WON, 
+	LOST
+}
 
 public class BattleSystem : MonoBehaviour
 {
-
-	public GameObject playerPrefab;
-	public GameObject enemyPrefab;
-
-	public Transform playerBattleStation;
-	public Transform enemyBattleStation;
-
-	Unit playerUnit;
-	Unit enemyUnit;
-
-	public Text dialogueText;
-
-	public BattleHUD playerHUD;
-	public BattleHUD enemyHUD;
-
+	// Battle state
 	public BattleState state;
 
-    // Start is called before the first frame update
-    void Start()
-    {
+	// Player variables
+	[SerializeField] private GameObject playerPrefab;
+	[SerializeField] private Transform playerBattleStation;
+	[SerializeField] private BattleHUD playerHUD;
+	Unit playerUnit;
+	[SerializeField] private GameObject attackButton = null;
+	[SerializeField] private GameObject healButton = null;
+
+	// Enemy variables
+	[SerializeField] private GameObject enemyPrefab;
+	[SerializeField] private Transform enemyBattleStation;
+	[SerializeField] private BattleHUD enemyHUD;
+	Unit enemyUnit;
+
+	// Dialogue text
+	public Text dialogueText;
+
+
+	// Start is called before the first frame update
+	void Start() 
+	{
+		// Set battle state to START
 		state = BattleState.START;
 		StartCoroutine(SetupBattle());
     }
-
+	 
+	// Function to set up the battle
 	IEnumerator SetupBattle()
 	{
+		// Create an instance of the player on the player battle station
 		GameObject playerGO = Instantiate(playerPrefab, playerBattleStation);
 		playerUnit = playerGO.GetComponent<Unit>();
 
+		// Create an instance of the enemy on the enemy battle station
 		GameObject enemyGO = Instantiate(enemyPrefab, enemyBattleStation);
 		enemyUnit = enemyGO.GetComponent<Unit>();
 
+		// Set dialogue text for enemy approaching
 		dialogueText.text = "A wild " + enemyUnit.unitName + " approaches...";
 
+		// Set up player and enemy HUDs
 		playerHUD.SetHUD(playerUnit);
 		enemyHUD.SetHUD(enemyUnit);
 
-		yield return new WaitForSeconds(2f);
+		// Pause for X number of second
+		yield return new WaitForSeconds(2.0f);
 
+		// Set battle state to PLAYERTURN
 		state = BattleState.PLAYERTURN;
 		PlayerTurn();
 	}
 
+	// Player attack function
 	IEnumerator PlayerAttack()
 	{
 		bool isDead = enemyUnit.TakeDamage(playerUnit.damage);
@@ -63,13 +83,15 @@ public class BattleSystem : MonoBehaviour
 		{
 			state = BattleState.WON;
 			EndBattle();
-		} else
+		} 
+		else 
 		{
 			state = BattleState.ENEMYTURN;
 			StartCoroutine(EnemyTurn());
 		}
 	}
 
+	// Enemy turn function
 	IEnumerator EnemyTurn()
 	{
 		dialogueText.text = enemyUnit.unitName + " attacks!";
@@ -92,8 +114,12 @@ public class BattleSystem : MonoBehaviour
 			PlayerTurn();
 		}
 
+		// Reactivate attack and heal buttons after enemy turn
+		attackButton.SetActive(true);
+		healButton.SetActive(true);
 	}
 
+	// End battle function
 	void EndBattle()
 	{
 		if(state == BattleState.WON)
@@ -105,11 +131,14 @@ public class BattleSystem : MonoBehaviour
 		}
 	}
 
+	// Player turn function
 	void PlayerTurn()
 	{
+		// Set dialogue text to "Choose an action:"
 		dialogueText.text = "Choose an action:";
 	}
 
+	// Player heal function
 	IEnumerator PlayerHeal()
 	{
 		playerUnit.Heal(5);
@@ -123,20 +152,30 @@ public class BattleSystem : MonoBehaviour
 		StartCoroutine(EnemyTurn());
 	}
 
+	// Attack button pressed function
 	public void OnAttackButton()
 	{
 		if (state != BattleState.PLAYERTURN)
 			return;
 
 		StartCoroutine(PlayerAttack());
+
+		// Deactivate attack and heal buttons after use
+		attackButton.SetActive(false);
+		healButton.SetActive(false);
 	}
 
+	// Heal button pressed function
 	public void OnHealButton()
 	{
 		if (state != BattleState.PLAYERTURN)
 			return;
 
 		StartCoroutine(PlayerHeal());
+
+		// Deactivate attack and heal buttons after use
+		attackButton.SetActive(false);
+		healButton.SetActive(false);
 	}
 
 }
