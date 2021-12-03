@@ -156,8 +156,10 @@ public class BattleSystem : MonoBehaviour
 	public void OnAttackButton()
 	{
 		if (state != BattleState.PLAYERTURN)
+		{
 			return;
-
+		}
+		
 		StartCoroutine(PlayerAttack());
 
 		// Deactivate attack and heal buttons after use
